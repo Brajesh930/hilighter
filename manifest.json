@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Proximity Word Highlighter",
+  "version": "1.0",
+  "description": "Highlight words within proximity and with wildcards",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png"
+    }
+  },
+  "permissions": ["scripting", "activeTab", "storage"]
+}
