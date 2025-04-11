@@ -1,13 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Proximity Word Highlighter",
+  "name": "Advanced Google Patent Highlighter",
   "version": "1.0",
-  "description": "Highlight words within proximity and with wildcards",
+  "description": "Highlight keyword rules with proximity logic on any page",
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icon.png"
     }
   },
-  "permissions": ["scripting", "activeTab", "storage"]
+  "permissions": ["scripting", "activeTab", "storage"],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"]
+  }]
 }

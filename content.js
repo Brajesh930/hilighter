@@ -1,90 +1,9 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const rulesContainer = document.getElementById("rulesContainer");
-    const addBoxBtn = document.getElementById("addBox");
-    const highlightBtn = document.getElementById("highlightBtn");
-    const autoHighlightToggle = document.getElementById("autoHighlightToggle");
-  
-    const defaultColors = ["#ffeb3b", "#a5d6a7", "#90caf9", "#f48fb1", "#ffe082", "#b39ddb", "#80cbc4"];
-  
-    const createRuleBox = (value = "", color = "#ffeb3b") => {
-      const div = document.createElement("div");
-      div.className = "rule-box";
-  
-      const textarea = document.createElement("textarea");
-      textarea.placeholder = "e.g. (((camera+) 5D (tilt+ or zoom+ or angle? or ptz?)) 10D (event? or fire or odor or heat))";
-      textarea.value = value;
-  
-      const colorPicker = document.createElement("input");
-      colorPicker.type = "color";
-      colorPicker.className = "color-picker";
-      colorPicker.value = color;
-  
-      const removeBtn = document.createElement("button");
-      removeBtn.className = "remove-btn";
-      removeBtn.textContent = "x";
-      removeBtn.onclick = async () => {
-        const rule = textarea.value.trim();
-        const tag = encodeURIComponent(rule);
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          args: [tag],
-          func: (tag) => {
-            document.querySelectorAll(`span[data-highlight="${tag}"]`).forEach(el => {
-              const text = document.createTextNode(el.textContent);
-              el.replaceWith(text);
-            });
-          }
-        });
-        div.remove();
-      };
-  
-      div.appendChild(textarea);
-      div.appendChild(removeBtn);
-      div.appendChild(colorPicker);
-      rulesContainer.appendChild(div);
-    };
-  
-    chrome.storage.sync.get(["savedRules", "autoHighlightEnabled"], (result) => {
-      const saved = result.savedRules || [];
-      const autoHighlight = result.autoHighlightEnabled || false;
-  
-      if (saved.length === 0) createRuleBox();
-      else saved.forEach(({ rule, color }) => createRuleBox(rule, color));
-  
-      autoHighlightToggle.checked = autoHighlight;
-    });
-  
-    addBoxBtn.addEventListener("click", () => {
-      createRuleBox("", defaultColors[Math.floor(Math.random() * defaultColors.length)]);
-    });
-  
-    autoHighlightToggle.addEventListener("change", () => {
-      chrome.storage.sync.set({ autoHighlightEnabled: autoHighlightToggle.checked });
-    });
-  
-    highlightBtn.addEventListener("click", async () => {
-      const boxes = Array.from(rulesContainer.querySelectorAll(".rule-box"));
-      const ruleData = [];
-  
-      boxes.forEach(box => {
-        const rule = box.querySelector("textarea").value.trim();
-        const color = box.querySelector("input[type='color']").value;
-        if (rule) ruleData.push({ rule, color });
-      });
-  
-      chrome.storage.sync.set({ savedRules: ruleData });
-  
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        args: [ruleData],
-        func: highlightPage
-      });
-    });
+chrome.storage.sync.get(["savedRules", "autoHighlightEnabled"], ({ savedRules, autoHighlightEnabled }) => {
+    if (autoHighlightEnabled && savedRules) {
+      highlightPage(savedRules);
+    }
   });
   
-  // Shared highlight logic
   function highlightPage(rules) {
     const escapeRegex = (str) =>
       str.replace(/([.*+?^${}()|\[\]\\])/g, "\\$1")
